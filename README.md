@@ -171,6 +171,6 @@ Interacting with Nexus:
 
 [![GitHub Stars](https://img.shields.io/github/stars/Ismail-2001/Personal-Task-Automation-Agent?style=social)](https://github.com/Ismail-2001/Personal-Task-Automation-Agent)
 
-**Maintained by Ismail Sajid & Enhanced by Antigravity**
+**Developed by Daniel**
 
 </div>
