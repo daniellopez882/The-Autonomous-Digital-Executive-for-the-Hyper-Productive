@@ -1,6 +1,6 @@
 <div align="center">
 
-![Nexus AI Banner](file:///C:/Users/Wajiz.pk/.gemini/antigravity/brain/786e0765-db55-4d77-bcff-9733ee49ae46/nexus_ai_banner_1772808892373.png)
+![Nexus AI Banner](assets/banner.png)
 
 # 🌌 Nexus AI
 ### The Autonomous Digital Executive for the Hyper-Productive
