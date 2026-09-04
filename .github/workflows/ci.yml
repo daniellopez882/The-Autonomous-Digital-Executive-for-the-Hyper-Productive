@@ -1,0 +1,140 @@
+name: CI
+
+# There was no pipeline here at all. The repository's only test asserted that a
+# constructor sets an attribute, and `python -m src.main` reported success
+# unconditionally, so nothing in the project could ever report a failure.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint and tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Ruff lint
+        run: ruff check . --output-format=github
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Tests
+        run: pytest -q
+
+      - name: Preflight must fail without credentials
+        # The point of the whole change: main() used to print "Systems at 100%"
+        # on exactly this machine. If it exits 0 here, that regression is back.
+        env:
+          GEMINI_API_KEY: ""
+          NOTION_API_KEY: ""
+          NOTION_DATABASE_ID: ""
+        run: |
+          if python -m src.main --check; then
+            echo "::error::preflight exited 0 with no credentials configured"
+            exit 1
+          fi
+          echo "preflight correctly refused an unconfigured environment"
+
+      - name: Preflight must pass with credentials
+        env:
+          GEMINI_API_KEY: ci-not-a-real-key
+          NOTION_API_KEY: ci-not-a-real-key
+          NOTION_DATABASE_ID: ci-not-a-real-database
+        run: python -m src.main --check
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Bandit
+        run: bandit -r src -ll -f screen
+
+      - name: pip-audit
+        run: pip-audit -r requirements.txt --strict
+        continue-on-error: true  # advisory feed availability, not a code defect
+
+      - name: No credential file may be tracked
+        run: |
+          tracked=$(git ls-files | grep -E '(^|/)(\.env|credentials/|token\.json)' || true)
+          if [ -n "$tracked" ]; then
+            echo "$tracked"
+            echo "::error::a credential file is committed"
+            exit 1
+          fi
+          echo "clean"
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  docker:
+    name: Container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: docker build -t nexus-ai:ci .
+
+      - name: The image must not run as root
+        run: |
+          uid=$(docker run --rm --entrypoint id nexus-ai:ci -u)
+          if [ "$uid" = "0" ]; then
+            echo "::error::the container runs as root; it writes an OAuth token"
+            exit 1
+          fi
+          echo "runs as uid $uid"
+
+      - name: The container's preflight must fail without credentials
+        run: |
+          if docker run --rm -e GEMINI_API_KEY= -e NOTION_API_KEY= nexus-ai:ci --check; then
+            echo "::error::the container reported success with no credentials"
+            exit 1
+          fi
+          echo "container preflight correctly refused"
+
+      - name: The container's preflight must pass with credentials
+        run: |
+          docker run --rm \
+            -e GEMINI_API_KEY=ci-not-a-real-key \
+            -e NOTION_API_KEY=ci-not-a-real-key \
+            -e NOTION_DATABASE_ID=ci-not-a-real-database \
+            nexus-ai:ci --check
