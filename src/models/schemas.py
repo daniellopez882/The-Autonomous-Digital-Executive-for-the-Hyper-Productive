@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+
 
 class EmailSchema(BaseModel):
     id: str
@@ -9,16 +9,18 @@ class EmailSchema(BaseModel):
     subject: str
     date: str
 
+
 class EventSchema(BaseModel):
     summary: str
-    location: Optional[str] = None
-    description: Optional[str] = None
+    location: str | None = None
+    description: str | None = None
     start: dict
     end: dict
+
 
 class TaskSchema(BaseModel):
     id: str
     title: str
     status: str
-    priority: Optional[str] = None
-    due_date: Optional[str] = None
+    priority: str | None = None
+    due_date: str | None = None
