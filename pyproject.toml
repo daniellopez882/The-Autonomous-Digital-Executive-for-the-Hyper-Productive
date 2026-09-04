@@ -1,0 +1,44 @@
+[project]
+name = "nexus-ai"
+version = "0.2.0"
+description = "A LangGraph agent that reads Gmail, manages Google Calendar and keeps a Notion task database."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = [
+    "error::DeprecationWarning:src.*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # import order
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "S",    # bandit
+    "C4",   # comprehensions
+    "SIM",  # simplify
+    "TID",  # tidy imports
+    "RUF",
+]
+ignore = [
+    "S101",  # assert: used throughout the test suite
+    "B008",  # function call in a default argument: pydantic Field() idiom
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S105", "S106", "E402"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"datetime.datetime.utcnow".msg = "Naive UTC. Use datetime.now(timezone.utc); see src/utils/helpers.py."
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]

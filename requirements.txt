@@ -1,11 +1,24 @@
-langchain
-langchain-community
-langchain-google-genai
-google-api-python-client
-google-auth-oauthlib
-google-auth-httplib2
-notion-client
-python-dotenv
-pydantic
-pydantic-settings
-schedule
+# Pinned to the versions this repository is tested against.
+#
+# The previous file listed eleven packages with no version constraint at all,
+# so `pip install -r requirements.txt` resolved to whatever PyPI served that
+# day. It also omitted langgraph, which every agent module imports directly.
+# That import worked only because langchain 1.x happens to depend on langgraph
+# -- an accident, and one that would have broken on any langchain 0.x install.
+
+langchain==1.4.0
+langchain-core==1.6.1
+langchain-community==0.4.2
+langchain-google-genai==4.4.0
+langgraph==1.2.11
+
+google-api-python-client==2.200.0
+google-auth-oauthlib==1.4.1
+google-auth-httplib2==0.4.2
+
+notion-client==3.1.0
+
+pydantic==2.13.5
+pydantic-settings==2.15.0
+python-dotenv==1.2.3
+schedule==1.2.2
