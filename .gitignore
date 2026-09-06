@@ -7,3 +7,11 @@ env/
 venv/
 credentials/
 *.log
+
+# Tooling
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+logs.txt
