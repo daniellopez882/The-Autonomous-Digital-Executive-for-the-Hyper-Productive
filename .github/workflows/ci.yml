@@ -91,7 +91,7 @@ jobs:
 
       - name: No credential file may be tracked
         run: |
-          tracked=$(git ls-files | grep -E '(^|/)(\.env|credentials/|token\.json)' || true)
+          tracked=$(git ls-files | grep -E '(^|/)\.env$|(^|/)credentials/|(^|/)token\.json$' || true)
           if [ -n "$tracked" ]; then
             echo "$tracked"
             echo "::error::a credential file is committed"
